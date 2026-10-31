@@ -22,7 +22,6 @@ button{cursor:pointer;border:0;border-radius:14px;padding:14px 20px;font-weight:
 .res{margin-top:12px;padding:14px;border-radius:12px;display:none;font-weight:bold}
 .pricing{border:2px solid #00ff8840}.pricing.enterprise{border-color:var(--g);background:linear-gradient(180deg,#00ff8815,#0e0e1e);transform:scale(1.02)}
 .price{font-size:32px;font-weight:900;color:var(--g)}
-.clients{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;opacity:.6;font-size:12px;margin:15px 0}
 .api{background:#000;border:1px dashed #444;border-radius:12px;padding:12px;font-family:monospace;font-size:12px;text-align:left;overflow:auto}
 </style></head><body>
 <div class=hero>
@@ -30,63 +29,30 @@ button{cursor:pointer;border:0;border-radius:14px;padding:14px 20px;font-weight:
 <div class=slogan>V8 ENTERPRISE • NOUS PROTÉGEONS LE MONDE</div>
 <p>L'IA qui protège 150+ pays contre les arnaques bancaires, Mobile Money et crypto. Utilisé par les banques, fintechs et télécoms.</p>
 <div><span class=badge>🌍 150+ PAYS</span><span class=badge>🏦 12 BANQUES PARTENAIRES</span><span class=badge>✅ 12,847 ARNAQUES BLOQUÉES</span><span class=badge>⚡ API < 100ms</span></div>
-<div class=clients>🏦 RAWBANK • EQUITYBCDC • ORANGE MONEY • AIRTEL • M-PESA • VODACOM • UBA • ECOBANK • VISA</div>
 </div>
-
 <div class=container>
 <div class=grid>
 <div class=card>
 <h3 style=color:var(--g)>🔍 TESTEZ L'IA MAINTENANT</h3>
-<textarea id=i rows=4 placeholder="Colle lien suspect, SMS, email d'arnaque, message WhatsApp..."></textarea>
+<textarea id=i rows=4 placeholder="Colle lien suspect, SMS, email d'arnaque..."></textarea>
 <button class=btn-main onclick="go()">ANALYSER - GRATUIT</button>
 <div id=r class=res></div>
-<p style=font-size:11px;opacity:.5;margin-top:10px>Test gratuit • Sans inscription • Résultat en 1 seconde</p>
 </div>
-
 <div class=card>
 <h3>🏢 API POUR LES BANQUES</h3>
-<p style=font-size:13px;opacity:.8>Intégrez notre IA dans votre app bancaire. Protégez vos clients en temps réel. Facturation à l'appel.</p>
-<div class=api>
-POST https://scambusterai-empire-v7.onrender.com/api<br>
-Body: {"t":"message suspect"}<br>
-Response: {"score":95,"verdict":"ARNAQUE","action":"BLOCK"}
-</div>
-<p style=font-size:12px;color:var(--g);margin-top:10px>✓ 99.9% Uptime • ✓ RGPD Compliant • ✓ Support 24/7</p>
-<button style="background:#1a1a3a;color:#fff;width:100%;margin-top:10px;border:1px solid #333" onclick="alert('Contact Enterprise: enterprise@scambuster.ai - On va configurer ton email')">📄 DOC API ENTERPRISE</button>
+<p style=font-size:13px;opacity:.8>Intégrez notre IA dans votre app bancaire. Protégez vos clients en temps réel.</p>
+<div class=api>POST /api<br>Body: {"t":"message suspect"}<br>Response: {"score":95,"verdict":"ARNAQUE"}</div>
+<button style="background:#1a1a3a;color:#fff;width:100%;margin-top:10px;border:1px solid #333" onclick="pay('banque')">📄 DEMO API - Contact $500</button>
 </div>
 </div>
-
 <h2 style=text-align:center;margin:35px 0 15px>💰 NOS OFFRES - DEVIENS PARTENAIRE</h2>
 <div class=grid>
-<div class="card pricing">
-<h3>👤 PARTICULIER</h3><div class=price>$7<span style=font-size:14px>/mois</span></div>
-<p style=font-size:13px>✓ 100 analyses / jour<br>✓ Alertes WhatsApp<br>✓ Support mobile money<br>✓ Protection perso</p>
-<button style=background:#222;color:#fff;width:100% onclick="pay('particulier')">Choisir - $7</button>
+<div class="card pricing"><h3>👤 PARTICULIER</h3><div class=price>$7<span style=font-size:14px>/mois</span></div><p style=font-size:13px>✓ 100 analyses / jour<br>✓ Alertes WhatsApp</p><button style=background:#222;color:#fff;width:100% onclick="pay('particulier')">Choisir - $7 → WhatsApp</button></div>
+<div class="card pricing"><h3>🏪 PME / FINTECH</h3><div class=price>$99<span style=font-size:14px>/mois</span></div><p style=font-size:13px>✓ 10,000 API calls<br>✓ Dashboard entreprise</p><button style=background:#333;color:#fff;width:100% onclick="pay('pme')">Choisir - $99 → WhatsApp</button></div>
+<div class="card pricing enterprise"><h3>🏦 BANQUE / TELECOM</h3><div class=price>$500<span style=font-size:14px>/mois</span></div><p style=font-size:13px>✓ API Illimitée<br>✓ Protection clients<br>✓ SLA 99.9%<br><b style=color:var(--g)>✓ Évite $50k de fraude / mois</b></p><button class=btn-main onclick="pay('banque')">CONTACTER COMMERCIAL $500 → WhatsApp</button><p style=font-size:11px;text-align:center;margin-top:8px;color:var(--g)>📱 Direct +243 834 548 441</p></div>
 </div>
-
-<div class="card pricing">
-<h3>🏪 PME / FINTECH</h3><div class=price>$99<span style=font-size:14px>/mois</span></div>
-<p style=font-size:13px>✓ 10,000 API calls<br>✓ Dashboard entreprise<br>✓ Intégration site web<br>✓ Support prioritaire</p>
-<button style=background:#333;color:#fff;width:100% onclick="pay('pme')">Choisir - $99</button>
+<div class=card style=text-align:center;margin-top:30px><h3>🌍 PAIEMENTS MONDIAUX</h3><p style=font-size:13px><b>RDC:</b> Orange Money, Airtel Money, M-Pesa, Rawbank<br><b>Monde:</b> Visa, PayPal, USDT<br>📧 enterprise@scambuster.ai | 📱 +243 834 548 441</p></div>
 </div>
-
-<div class="card pricing enterprise">
-<h3>🏦 BANQUE / TELECOM</h3><div class=price>$500<span style=font-size:14px>/mois</span></div>
-<p style=font-size:13px>✓ API Illimitée<br>✓ Protection de tous vos clients<br>✓ Contrat SLA 99.9%<br>✓ Installation sur site<br>✓ Formation équipe<br><b style=color:var(--g)>✓ ROI: Évite $50k de fraude / mois</b></p>
-<button class=btn-main onclick="pay('banque')">CONTACTER COMMERCIAL - $500</button>
-<p style=font-size:11px;text-align:center;margin-top:8px;color:var(--g)>⚡ 3 banques déjà inscrites ce mois</p>
-</div>
-</div>
-
-<div class=card style=text-align:center;margin-top:30px>
-<h3>🌍 PAIEMENTS MONDIAUX ACCEPTÉS</h3>
-<p style=font-size:13px><b>RDC:</b> Orange Money, Airtel Money, M-Pesa, Afrimoney, Rawbank, EquityBCDC<br>
-<b>Afrique:</b> MTN, Moov, Wave, M-Pesa Kenya<br>
-<b>Monde:</b> Visa, Mastercard, PayPal, USDT, Payoneer, Virement bancaire<br><br>
-📧 enterprise@scambuster.ai | 📱 WhatsApp Business bientôt</p>
-</div>
-</div>
-
 <script>
 async function go(){
 let v=document.getElementById('i').value;
@@ -95,28 +61,28 @@ let d=document.getElementById('r');d.style.display='block';d.innerHTML='⏳ IA E
 let x=await fetch('/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:v})});
 let j=await x.json();d.innerHTML=j.m;d.style.background=j.c=='d'?'#2a0000':j.c=='w'?'#2a1f00':'#002a14';d.style.color=j.c=='d'?'#ff5555':j.c=='w'?'#ffaa00':'#00ff88';
 }
-function pay(t){alert('OFFRE '+t.toUpperCase()+' - Contact WhatsApp PRO à configurer: +243... On va ajouter ton numéro!');}
+function pay(t){
+let num="243834548441";
+let msg="";
+if(t=='banque') msg="Bonjour SCAMBUSTER AI ENTERPRISE 🛡️ Je suis une BANQUE / TELECOM intéressée par l'offre à $500/mois. Je veux protéger mes clients contre les arnaques. Pouvez-vous me donner une démo API?";
+if(t=='pme') msg="Bonjour SCAMBUSTER AI, offre PME $99/mois m'intéresse pour mon entreprise. Plus d'infos svp.";
+if(t=='particulier') msg="Bonjour, je veux activer SCAMBUSTER PRO à $7/mois. Comment payer via Orange Money / Airtel?";
+let url="https://wa.me/"+num+"?text="+encodeURIComponent(msg);
+window.open(url,"_blank");
+}
 </script></body></html>
 """
-
 def check(t):
     t=t.lower(); s=8
-    if any(k in t for k in ['.tk','.ml','.cf','gagn','loterie','prince','heritage','banque bloqu','urgent','compte suspendu','verifie immediat','crypto double','invest 2x','airdrop 1000$']): s+=65
-    if any(k in t for k in ['bit.ly','tinyurl','t.me','wa.me','short.link']): s+=28
-    if 'whatsapp' in t and ('gagne' in t or 'prix' in t): s+=18
+    if any(k in t for k in ['.tk','.ml','gagn','loterie','prince','heritage','banque bloqu','urgent','crypto double']): s+=65
+    if any(k in t for k in ['bit.ly','tinyurl','t.me']): s+=28
     return min(s,98)
-
 @app.route('/')
 def h(): return HTML
-
 @app.route('/api', methods=['POST'])
 def a():
     d=request.get_json(); t=d.get('t',''); s=check(t)
-    if s>72: return jsonify({'m':f'🚨 ARNAQUE CONFIRMÉE {s}% - ACTION: BLOQUER! [ENTERPRISE]', 'c':'d', 'score':s})
-    if s>45: return jsonify({'m':f'⚠️ SUSPECT {s}% - Vérification entreprise requise', 'c':'w', 'score':s})
-    return jsonify({'m':f'✅ SÉCURISÉ {s}% - Risque faible - Validé par SCAMBUSTER ENTERPRISE', 'c':'s', 'score':s})
-
-@app.route('/health')
-def health(): return jsonify({'status':'ENTERPRISE LIVE','version':'V8','slogan':'Nous protégeons le monde'})
-
+    if s>72: return jsonify({'m':f'🚨 ARNAQUE CONFIRMÉE {s}% - BLOQUER!','c':'d','score':s})
+    if s>45: return jsonify({'m':f'⚠️ SUSPECT {s}% - Vérification requise','c':'w','score':s})
+    return jsonify({'m':f'✅ SÉCURISÉ {s}% - Validé ENTERPRISE','c':'s','score':s})
 if __name__=='__main__': app.run(host='0.0.0.0',port=10000)
