@@ -1,48 +1,49 @@
-import os
-from flask import Flask, request, render_template_string, jsonify
+from flask import Flask, request, jsonify
+import re
 from datetime import datetime
+import os
+
 app = Flask(__name__)
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
-try:
- from supabase import create_client
- supabase = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
-except: supabase = None
-T={"fr":{"title":"ScambusterAI Empire V7","subtitle":"L'IA Anti-Arnaque d'Afrique","placeholder":"Collez le message suspect ici...","btn":"🔍 Analyser Maintenant","result_safe":"✅ MESSAGE SÛR","result_scam":"🚨 ARNAQUE DETECTEE","result_suspicious":"⚠️ SUSPECT","footer":"Empire cree depuis Lubumbashi","stats_scanned":"Messages analyses","stats_blocked":"Arnaques bloquees","language":"🌍 English"},"en":{"title":"ScambusterAI Empire V7","subtitle":"Africa's Most Powerful Anti-Scam AI","placeholder":"Paste suspicious message here...","btn":"🔍 Analyze Now","result_safe":"✅ SAFE","result_scam":"🚨 SCAM DETECTED","result_suspicious":"⚠️ SUSPICIOUS","footer":"Empire built from Lubumbashi","stats_scanned":"Messages scanned","stats_blocked":"Scams blocked","language":"🌍 Français"}}
-KEYWORDS=["urgent","gagné","won","loterie","lottery","prince","héritage","inheritance","bitcoin double","investissement","investment","cliquez","click here","compte sera bloqué","account blocked","félicitations","congratulations","whatsapp money","airtel money","mpesa","orange money","western union","gratuit","free money"]
-def analyze(text):
- tl=text.lower();s=0;f=[]
- for k in KEYWORDS:
-  if k in tl: s+=25;f.append(k)
- if len(text)<10: return "suspicious",30,f
- if s>=50: return "scam",min(95,s),f
- elif s>=25: return "suspicious",s,f
- else: return "safe",10,f
-HTML="""<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ t.title }}</title><style>body{font-family:system-ui;background:#0f172a;color:white;margin:0;padding:20px}.card{max-width:600px;margin:40px auto;background:#1e293b;padding:25px;border-radius:16px}h1{color:#38bdf8;margin:0}.sub{color:#94a3b8;margin-bottom:20px}textarea{width:100%;height:140px;background:#0f172a;border:2px solid #334155;border-radius:12px;color:white;padding:15px;font-size:16px;box-sizing:border-box}button{width:100%;margin-top:15px;background:#0ea5e9;border:none;padding:15px;border-radius:12px;color:white;font-size:18px;font-weight:bold}button:hover{background:#0284c7}.result{margin-top:20px;padding:20px;border-radius:12px;font-weight:bold;text-align:center;font-size:20px}.safe{background:#065f46;border:2px solid #10b981}.scam{background:#7f1d1d;border:2px solid #ef4444}.suspicious{background:#78350f;border:2px solid #f59e0b}.stats{display:flex;gap:10px;margin-top:20px}.stat{flex:1;background:#0f172a;padding:12px;border-radius:10px;text-align:center}.stat b{font-size:22px;display:block;color:#38bdf8}.footer{text-align:center;margin-top:30px;color:#64748b;font-size:13px}.lang{position:absolute;top:15px;right:15px;background:#1e293b;border:1px solid #334155;padding:8px 12px;border-radius:20px;text-decoration:none;color:white}</style></head><body><a class="lang" href="/?lang={{ other_lang }}">{{ t.language }}</a><div class="card"><h1>{{ t.title }}</h1><div class="sub">{{ t.subtitle }}</div><form method="POST"><textarea name="message" placeholder="{{ t.placeholder }}" required>{{ msg }}</textarea><button type="submit">{{ t.btn }}</button></form>{% if result %}<div class="result {{ level }}">{% if level=='safe' %}{{ t.result_safe }}{% elif level=='scam' %}{{ t.result_scam }}{% else %}{{ t.result_suspicious }}{% endif %}<div style="font-size:14px;margin-top:10px;font-weight:normal">Risque: {{ risk }}%</div></div>{% endif %}<div class="stats"><div class="stat"><b>{{ scanned }}</b>{{ t.stats_scanned }}</div><div class="stat"><b>{{ blocked }}</b>{{ t.stats_blocked }}</div></div><div class="footer">{{ t.footer }}<br>Supabase: {{ 'Connecte' if supabase_ok else 'Mode Local' }}</div></div></body></html>"""
-@app.route("/", methods=["GET", "POST"])
-def home():
- lang=request.args.get("lang",request.cookies.get("lang","fr"))
- if lang not in ["fr","en"]: lang="fr"
- other="en" if lang=="fr" else "fr";t=T[lang];msg="";result=None;level="safe";risk=0;found=[];scanned=12847;blocked=3421
- if supabase:
-  try:
-   d=supabase.table("scans").select("id", count="exact").execute();scanned=d.count if d.count else scanned
-   d2=supabase.table("scams").select("id", count="exact").execute();blocked=d2.count if d2.count else blocked
-  except: pass
- if request.method=="POST":
-  msg=request.form.get("message","")
-  if msg:
-   level,risk,found=analyze(msg);result=True
-   if supabase:
-    try:
-     supabase.table("scans").insert({"content":msg[:500],"risk_score":risk,"level":level,"language":lang}).execute()
-     if level=="scam": supabase.table("scams").insert({"content":msg[:500],"keywords":",".join(found)}).execute()
-    except: pass
-   scanned+=1
-   if level=="scam": blocked+=1
- from flask import make_response
- ren=render_template_string(HTML, t=t, other_lang=other, msg=msg, result=result, level=level, risk=risk, found=found, scanned=scanned, blocked=blocked, supabase_ok=bool(supabase))
- r=make_response(ren);r.set_cookie("lang", lang, max_age=2592000);return r
-@app.route("/health")
-def health(): return jsonify({"status":"Empire V7 Online","supabase":bool(supabase),"time":datetime.now().isoformat()})
-if __name__=="__main__": app.run(host="0.0.0.0", port=int(os.environ.get("PORT",10000)))
+
+HTML = """<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>SCAMBUSTER AI V7</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui;background:#0a0a0f;color:#fff;min-height:100vh;padding:15px}.container{max-width:600px;margin:0 auto}.header{text-align:center;margin:20px 0}.logo{font-size:50px}h1{font-size:26px;background:linear-gradient(90deg,#00ff88,#00d4ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:900}.subtitle{color:#888;margin-top:5px;font-size:12px}.card{background:#15151f;border:1px solid #222;border-radius:20px;padding:20px;margin:15px 0}label{color:#aaa;font-size:11px;text-transform:uppercase;display:block;margin-bottom:6px}textarea,input{width:100%;background:#0a0a0f;border:1px solid #333;border-radius:12px;padding:12px;color:#fff;font-size:15px;outline:none}textarea{height:110px;resize:none}.btn{width:100%;background:linear-gradient(90deg,#00ff88,#00d4ff);color:#000;border:none;border-radius:12px;padding:14px;font-size:17px;font-weight:900;cursor:pointer;margin-top:10px}.result{display:none;margin-top:20px}.result.show{display:block}.score-circle{width:110px;height:110px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;margin:0 auto 15px;border:4px solid}.score-red{border-color:#ff3344;background:rgba(255,51,68,.1);color:#ff3344}.score-orange{border-color:#ffaa00;background:rgba(255,170,0,.1);color:#ffaa00}.score-yellow{border-color:#ffdd00;background:rgba(255,221,0,.1);color:#ffdd00}.score-green{border-color:#00ff88;background:rgba(0,255,136,.1);color:#00ff88}.risk-text{text-align:center;font-size:20px;font-weight:800;margin-bottom:12px}.flags{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:12px 0}.flag{background:#222;border:1px solid #333;padding:5px 10px;border-radius:20px;font-size:10px;color:#aaa}.details{background:#0a0a0f;border-radius:12px;padding:12px;margin:12px 0}.detail-item{padding:6px 0;border-bottom:1px solid #1a1a2a;font-size:13px;color:#ccc}.advice{border-radius:12px;padding:12px;font-weight:600;text-align:center;margin-top:12px}.advice.red{background:rgba(255,51,68,.15);border:1px solid #ff3344;color:#ff8888}.advice.orange{background:rgba(255,170,0,.15);border:1px solid #ffaa00;color:#ffcc66}.advice.green{background:rgba(0,255,136,.15);border:1px solid #00ff88;color:#88ffaa}.footer{text-align:center;margin:30px 0;color:#555;font-size:11px}.examples{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}.example-btn{background:#1a1a2a;border:1px solid #333;color:#888;padding:8px;border-radius:8px;font-size:11px;cursor:pointer}</style></head><body><div class="container"><div class="header"><div class="logo">🛡️</div><h1>SCAMBUSTER AI V7</h1><div class="subtitle">🟢 LIVE • Empire Lubumbashi • Anti-Scam</div></div><div class="card"><div><label>📩 Message Suspect</label><textarea id="text" placeholder="Colle message ici... Ex: Félicitations vous avez gagné 5000$!"></textarea></div><div style="margin-top:12px"><label>🔗 Lien</label><input id="url" type="text" placeholder="https://..."></div><button class="btn" id="btn" onclick="analyze()">🔍 ANALYSER</button><div class="examples"><button class="example-btn" onclick="loadEx(0)">💰 Prince</button><button class="example-btn" onclick="loadEx(1)">🏦 Banque</button><button class="example-btn" onclick="loadEx(2)">🎰 Loterie</button><button class="example-btn" onclick="loadEx(3)">💘 Romance</button></div><div class="result" id="result"><div class="score-circle" id="circle">0%</div><div class="risk-text" id="risk"></div><div class="flags" id="flags"></div><div class="details" id="details"></div><div class="advice" id="advice"></div></div></div><div class="footer">SCAMBUSTER AI V7 © 2026 • ciyoyig-alt • Render LIVE</div></div><script>const ex=["Bonjour cher ami, Je suis Prince N'Golo du Mali, j'ai 15 Millions $ bloqués. Envoie ton compte IMMEDIATEMENT!!!","ALERTE: Votre compte Rawbank suspendu! Cliquez http://rawbank-secure.tk/verify - URGENT sinon blocage!","FELICITATIONS!!! Vous avez GAGNE 5000$ loterie WhatsApp! Cliquez bit.ly/win5000 - Offre expire AUJOURD'HUI!!!","Salut bébé c'est Jessica, soldat américain en Syrie, je t'aime. Besoin de 500$ via Western Union stp chéri ❤️"];function loadEx(i){document.getElementById('text').value=ex[i];}async function analyze(){const text=document.getElementById('text').value;const url=document.getElementById('url').value;if(!text&&!url){alert('Colle un message!');return;}const btn=document.getElementById('btn');btn.textContent='⏳ ANALYSE...';try{const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,url})});const d=await res.json();const r=document.getElementById('result');r.classList.add('show');const c=document.getElementById('circle');c.textContent=d.score+'%';c.className='score-circle score-'+d.color;document.getElementById('risk').textContent=d.risk;document.getElementById('flags').innerHTML=d.flags.map(f=>`<span class=flag>🚩 ${f}</span>`).join('')||'✅ Aucun';document.getElementById('details').innerHTML=d.details.map(x=>`<div class=detail-item>• ${x}</div>`).join('');const a=document.getElementById('advice');a.textContent=d.advice;a.className='advice '+d.color;r.scrollIntoView({behavior:'smooth'});}catch(e){alert('Erreur');}btn.textContent='🔍 ANALYSER';}</script></body></html>"""
+
+SCAM_PATTERNS = {
+    'urgency': ['urgent','immediatement','immediate','now','asap','dernière chance','expire','bloqué','suspendu'],
+    'money': ['gagné','won','lottery','loterie','héritage','inheritance','million','prince','donation','transfer','western union'],
+    'phishing': ['cliquez','click here','verify','vérifiez','compte','password','banque','bank','paypal','binance'],
+    'romance': ['amour','bébé','chéri','love you','military','soldat'],
+    'crypto': ['invest','investissement','doubler','bitcoin','usdt','trading','profit garanti'],
+}
+
+def analyze_text(text):
+    tl = text.lower()
+    score = 0; flags=[]; details=[]
+    if len(text) < 5:
+        return {"score":0,"risk":"🟢 SÉCURISÉ","color":"green","flags":[],"details":["Trop court"]}
+    for cat,kws in SCAM_PATTERNS.items():
+        found=[k for k in kws if k in tl]
+        if found:
+            score+=len(found)*15; flags.append(cat.upper()); details.append(f"{cat}: {', '.join(found[:2])}")
+    if re.search(r'\$\s?\d+|\d+\s?\$', text): score+=20; details.append("Montant $ détecté")
+    if 'http' in tl or 'www.' in tl or 'bit.ly' in tl: score+=15; flags.append("LINK"); details.append("Lien suspect")
+    score=min(score,100)
+    if score>=75: risk,color="🔴 ARNAQUE ÉLEVÉE","red"
+    elif score>=45: risk,color="🟠 SUSPECT","orange"
+    elif score>=20: risk,color="🟡 ATTENTION","yellow"
+    else: risk,color="🟢 SÉCURISÉ","green"
+    return {"score":score,"risk":risk,"color":color,"flags":list(set(flags)),"details":details}
+
+@app.route('/')
+def index(): return HTML
+
+@app.route('/api/analyze', methods=['POST'])
+def analyze():
+    data=request.get_json() or {}
+    txt=data.get('text','')+' '+data.get('url','')
+    r=analyze_text(txt)
+    r['advice']="🚨 NE CLIQUE PAS! Bloque et signale." if r['score']>=75 else "⚠️ Méfie-toi, vérifie l'expéditeur." if r['score']>=45 else "✅ Semble OK mais reste vigilant."
+    return jsonify(r)
+
+if __name__=='__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT',5000)))
