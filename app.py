@@ -130,5 +130,80 @@ def api_analyze():
 def api_docs():
     return jsonify({"docs": "POST /api/analyze avec Header x-api-key et body {\"message\": \"...\"}"})
 # ========== FIN API BANQUE ==========
-
+@app.route('/pricing')
+def pricing():
+    return '''
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing - ScambusterAI Empire V8</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; background: #0a0a0a; color: white; margin:0; padding: 20px; }
+        .container { max-width: 1100px; margin: auto; }
+        h1 { text-align: center; font-size: 2.5em; margin-top: 40px; }
+        .subtitle { text-align: center; color: #888; margin-bottom: 50px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
+        .card { background: #1a1a1a; border: 1px solid #333; border-radius: 16px; padding: 30px; }
+        .card.popular { border: 2px solid #00ff88; transform: scale(1.05); background: #151f1a; }
+        .badge { background: #00ff88; color: black; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .price { font-size: 3em; font-weight: bold; margin: 20px 0; }
+        .price span { font-size: 16px; color: #888; }
+        ul { list-style: none; padding: 0; }
+        li { padding: 8px 0; color: #ccc; }
+        li::before { content: "✓ "; color: #00ff88; font-weight: bold; }
+        .btn { display: block; text-align: center; background: white; color: black; padding: 14px; border-radius: 10px; text-decoration: none; font-weight: bold; margin-top: 20px; }
+        .btn.green { background: #00ff88; }
+        .btn:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ScambusterAI Empire V8</h1>
+        <p class="subtitle">La seule IA qui bat les arnaques PawaPay à 8% - Testé à Lubumbashi</p>
+        <div class="grid">
+            <div class="card">
+                <h3>FREE</h3>
+                <div class="price">$0 <span>/mois</span></div>
+                <ul>
+                    <li>100 vérifications / mois</li>
+                    <li>API de base</li>
+                    <li>Détection SMS standard</li>
+                    <li>Communauté Discord</li>
+                </ul>
+                <a href="/" class="btn">Commencer Gratuit</a>
+            </div>
+            <div class="card popular">
+                <span class="badge">LE PLUS POPULAIRE</span>
+                <h3>GROWTH</h3>
+                <div class="price">$99 <span>/mois</span></div>
+                <ul>
+                    <li>10,000 vérifications / mois</li>
+                    <li>API Rapide &lt;100ms</li>
+                    <li>Détection PawaPay, M-Pesa, Airtel</li>
+                    <li>Support Email 24h</li>
+                    <li>Dashboard Pro</li>
+                </ul>
+                <a href="https://wa.me/243000000000?text=Je%20veux%20le%20plan%20GROWTH%20a%20$99" class="btn green">Choisir Growth</a>
+            </div>
+            <div class="card">
+                <h3>EMPIRE</h3>
+                <div class="price">$500 <span>/mois</span></div>
+                <ul>
+                    <li>Vérifications ILLIMITÉES</li>
+                    <li>Clé API privée sk_live_...</li>
+                    <li>Preuve PawaPay 172.51 USD incluse</li>
+                    <li>Support WhatsApp 24/7</li>
+                    <li>Installation pour banque/fintech</li>
+                    <li>Contrat & Facture</li>
+                </ul>
+                <a href="https://wa.me/243000000000?text=Je%20veux%20le%20plan%20EMPIRE%20a%20$500%20pour%20ma%20banque" class="btn green">Devenir Empire - $500</a>
+            </div>
+        </div>
+        <p style="text-align:center; margin-top:60px; color:#666;">Live depuis Lubumbashi, RDC • 150+ pays protégés • Test réel: 8% vs 73% arnaque</p>
+    </div>
+</body>
+</html>
+    '''
 if __name__=='__main__': app.run(host='0.0.0.0',port=10000)
