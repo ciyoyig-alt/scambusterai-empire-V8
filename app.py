@@ -134,9 +134,7 @@ def api_docs():
 @app.route('/pricing')
 @app.route('/pricing')
 def pricing():
-    return """
-    <html>
-    <head><title>ScambusterAI Empire V8 - Global Pricing</title>
+<head><title>ScambusterAI Empire V8 - Global Pricing</title>
     <style>
     body{background:#000;color:#fff;font-family:Arial;padding:40px;text-align:center}
     .card{display:inline-block;width:280px;border:1px solid #333;border-radius:16px;padding:24px;margin:12px;vertical-align:top}
