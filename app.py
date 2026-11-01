@@ -131,8 +131,45 @@ def api_docs():
     return jsonify({"docs": "POST /api/analyze avec Header x-api-key et body {\"message\": \"...\"}"})
 # ========== FIN API BANQUE ==========
 @app.route('/pricing')
+@app.route('/pricing')
 def pricing():
-    return '''
+    return """
+    <html>
+    <head><title>ScambusterAI Empire V8 - Global Pricing</title>
+    <style>
+    body{background:#000;color:#fff;font-family:Arial;padding:40px;text-align:center}
+    .card{display:inline-block;width:280px;border:1px solid #333;border-radius:16px;padding:24px;margin:12px;vertical-align:top}
+    .popular{border:2px solid #00ff88;transform:scale(1.05)}
+    .btn{display:block;background:#00ff88;color:#000;padding:12px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:16px}
+    .btn-dark{background:#fff;color:#000}
+    h1{font-size:42px} h1 span{color:#00ff88}
+    </style></head>
+    <body>
+    <h1>ScambusterAI <span>Empire V8</span></h1>
+    <p style="color:#888;max-width:600px;margin:0 auto 20px">The Global Anti-Scam Engine. Protecting Fintechs, Banks & Mobile Money in 150+ Countries.<br>Built in Lubumbashi, Deployed Worldwide.</p>
+    <p style="color:#00ff88">⚡ Live Production Proof: PawaPay $172.51 - Fraud Score 8% - Verified</p>
+    <div>
+        <div class="card">
+            <h3>FREE</h3><h2>$0</h2><p>For Indie Devs & Testing</p>
+            <p style="text-align:left;color:#aaa">✓ 100 checks / month<br>✓ M-Pesa, Airtel, Orange<br>✓ Community Support</p>
+            <a class="btn btn-dark" href="/">Start Free</a>
+        </div>
+        <div class="card popular">
+            <div style="background:#00ff88;color:#000;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:bold;margin-bottom:10px;display:inline-block">MOST POPULAR</div>
+            <h3>GROWTH</h3><h2>$99<span style="font-size:16px">/mo</span></h2><p>For Growing Fintech Startups</p>
+            <p style="text-align:left;color:#aaa">✓ 10,000 checks / month<br>✓ All African MNOs + Global<br>✓ API + Dashboard<br>✓ Email Support</p>
+            <a class="btn" href="https://wa.me/243000000000">Get Growth</a>
+        </div>
+        <div class="card" style="border-color:#00ff88">
+            <h3>EMPIRE</h3><h2>$500<span style="font-size:16px">/mo</span></h2><p>For Global Banks & MNOs</p>
+            <p style="text-align:left;color:#aaa">✓ Unlimited checks<br>✓ 150+ Countries Coverage<br>✓ Live PawaPay Verification<br>✓ Priority SLA + WhatsApp<br>✓ Custom Integration</p>
+            <a class="btn" href="https://wa.me/243000000000">Contact for Empire</a>
+        </div>
+    </div>
+    <p style="margin-top:40px;color:#555">Trusted by fintechs in Kenya, Nigeria, Senegal, DRC, South Africa & Europe</p>
+    </body></html>
+    """
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
