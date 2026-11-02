@@ -1,76 +1,128 @@
-from flask import Flask
+from flask import Flask, request
 app = Flask(__name__)
+
+# ====== SCAMBUSTER AI WORLD - GLOBAL DATABASE ======
+# Toutes les banques & fintechs les plus utilisées au MONDE - Cibles #1 des scammers
+GLOBAL_BANKS_FINTECHS = [
+    # --- GLOBAL BANKS ---
+    {"name": "JPMorgan Chase", "type": "Banque Globale", "region": "USA", "risk": "🔴 Très Ciblé"},
+    {"name": "Bank of America", "type": "Banque Globale", "region": "USA", "risk": "🔴 Très Ciblé"},
+    {"name": "HSBC", "type": "Banque Globale", "region": "UK/World", "risk": "🔴 Très Ciblé"},
+    {"name": "Barclays", "type": "Banque Globale", "region": "UK", "risk": "🟠 Ciblé"},
+    {"name": "BNP Paribas", "type": "Banque Globale", "region": "France/EU", "risk": "🟠 Ciblé"},
+    {"name": "Deutsche Bank", "type": "Banque Globale", "region": "Germany", "risk": "🟠 Ciblé"},
+    {"name": "Santander", "type": "Banque Globale", "region": "Spain/Latam", "risk": "🟠 Ciblé"},
+    {"name": "Standard Chartered", "type": "Banque Globale", "region": "Africa/Asia", "risk": "🔴 Très Ciblé"},
+    {"name": "Ecobank", "type": "Banque Pan-Africaine", "region": "Africa", "risk": "🔴 Très Ciblé"},
+    {"name": "UBA", "type": "Banque Pan-Africaine", "region": "Africa", "risk": "🔴 Très Ciblé"},
+    {"name": "Rawbank", "type": "Banque", "region": "DRC", "risk": "🟢 Vérifiée"},
+    {"name": "Equity BCDC", "type": "Banque", "region": "DRC", "risk": "🟢 Vérifiée"},
+    {"name": "KCB Bank", "type": "Banque", "region": "East Africa", "risk": "🟠 Ciblé"},
+    {"name": "First Bank Nigeria", "type": "Banque", "region": "Nigeria", "risk": "🔴 Très Ciblé"},
+
+    # --- GLOBAL FINTECHS - Le coeur des scams 2026 ---
+    {"name": "PayPal", "type": "Fintech Paiement", "region": "World", "risk": "🔴 #1 Phishing Mondial"},
+    {"name": "Wise (ex TransferWise)", "type": "Fintech Transfert", "region": "World", "risk": "🔴 Très Ciblé"},
+    {"name": "Revolut", "type": "Fintech Néobanque", "region": "EU/World", "risk": "🔴 Très Ciblé"},
+    {"name": "Venmo", "type": "Fintech Paiement", "region": "USA", "risk": "🟠 Ciblé"},
+    {"name": "Cash App", "type": "Fintech Paiement", "region": "USA", "risk": "🔴 Très Ciblé"},
+    {"name": "Zelle", "type": "Fintech Paiement", "region": "USA", "risk": "🔴 Très Ciblé"},
+    {"name": "Skrill", "type": "Fintech", "region": "World", "risk": "🟠 Ciblé"},
+    {"name": "Neteller", "type": "Fintech", "region": "World", "risk": "🟠 Ciblé"},
+    {"name": "Payoneer", "type": "Fintech Freelance", "region": "World", "risk": "🔴 Très Ciblé"},
+
+    # --- MOBILE MONEY WORLD ---
+    {"name": "M-Pesa", "type": "Mobile Money", "region": "Kenya/Africa", "risk": "🔴 #1 Scam Africa"},
+    {"name": "Airtel Money", "type": "Mobile Money", "region": "Africa/India", "risk": "🔴 Très Ciblé"},
+    {"name": "Orange Money", "type": "Mobile Money", "region": "Africa/EU", "risk": "🔴 Très Ciblé"},
+    {"name": "MTN MoMo", "type": "Mobile Money", "region": "Africa", "risk": "🔴 Très Ciblé"},
+    {"name": "Wave", "type": "Mobile Money", "region": "West Africa", "risk": "🟠 Ciblé"},
+    {"name": "GCash", "type": "Mobile Money", "region": "Philippines", "risk": "🔴 Très Ciblé"},
+    {"name": "Paytm", "type": "Mobile Money", "region": "India", "risk": "🔴 Très Ciblé"},
+
+    # --- CRYPTO FINTECHS - La mine d'or des scammers ---
+    {"name": "Binance", "type": "Crypto Exchange", "region": "World", "risk": "🔴 #1 Fake Apps"},
+    {"name": "Coinbase", "type": "Crypto Exchange", "region": "World", "risk": "🔴 Très Ciblé"},
+    {"name": "Trust Wallet", "type": "Crypto Wallet", "region": "World", "risk": "🔴 Fake Versions"},
+    {"name": "MetaMask", "type": "Crypto Wallet", "region": "World", "risk": "🔴 Très Ciblé"},
+    {"name": "Kraken", "type": "Crypto Exchange", "region": "World", "risk": "🟠 Ciblé"},
+    {"name": "KuCoin", "type": "Crypto Exchange", "region": "World", "risk": "🟠 Ciblé"},
+    {"name": "Tether USDT", "type": "Crypto Stablecoin", "region": "World", "risk": "🔴 Fake Airdrops"},
+]
+
+def scan_engine(text):
+    text_low = text.lower()
+    score = 0
+    reasons = []
+    # ScamBuster AI connait toutes ces marques mondiales
+    for bank in GLOBAL_BANKS_FINTECHS:
+        if bank["name"].lower() in text_low and "🔴" in bank["risk"]:
+            score += 25
+            reasons.append(f"Impersonation: {bank['name']}")
+    
+    extra = ["urgent", "compte bloqué", "gagnez", "double", "bit.ly", "http://", "vérifiez"]
+    for w in extra:
+        if w in text_low:
+            score += 10
+    
+    score = min(score, 99)
+    if score >= 70: verdict, color = "SCAM DETECTED", "#ff2a2a"
+    elif score >= 40: verdict, color = "SUSPECT - Vérifiez Banque", "#ffaa00"
+    else: verdict, color = "SAFE", "#00ff88"
+    return score, verdict, color, reasons
 
 @app.route("/")
 def home():
-    return """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ScamBuster Empire V9 WORLD</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;700&display=swap');
-body{background:#000;color:#fff;font-family:'Inter',sans-serif;text-align:center;margin:0;padding:0;overflow-x:hidden}
-.hero{padding:60px 20px 30px}
-h1{font-family:'Orbitron',sans-serif;font-size:48px;color:#fff;letter-spacing:3px;margin:0;text-shadow:0 0 30px #00ff88}
-h1 span{color:#00ff88}
-.subtitle{font-size:18px;color:#00ccff;letter-spacing:6px;margin-top:10px;text-transform:uppercase}
-.badge{margin:30px auto;background:rgba(0,255,136,0.1);border:1px solid #00ff88;border-radius:50px;padding:10px 25px;display:inline-block}
-.dot{display:inline-block;width:10px;height:10px;background:#00ff88;border-radius:50%;box-shadow:0 0 10px #00ff88;animation:blink 1.5s infinite;margin-right:8px}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-.grid{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;padding:20px;max-width:1000px;margin:auto}
-.card{background:linear-gradient(180deg,#111,#0a0a0a);border:1px solid #222;border-radius:20px;padding:25px;width:300px;transition:0.3s}
-.card:hover{border-color:#00ff88;box-shadow:0 0 30px rgba(0,255,136,0.2);transform:translateY(-5px)}
-.card h3{color:#00ff88;margin-top:0}
-.btn{background:linear-gradient(90deg,#00ff88,#00ccff);color:#000;border:none;padding:16px 40px;border-radius:50px;font-weight:900;font-size:16px;letter-spacing:1px;cursor:pointer;box-shadow:0 0 20px rgba(0,255,136,0.5)}
-.footer{margin-top:50px;padding:20px;color:#444;font-size:12px;letter-spacing:2px;border-top:1px solid #111}
-.footer strong{color:#666}
-</style>
-</head>
-<body>
-<div class="hero">
-<h1>SCAM<span>BUSTER</span></h1>
-<div class="subtitle">Empire V9 World Edition</div>
-<div class="badge"><span class="dot"></span> GLOBAL SYSTEM ONLINE - WORLDWIDE SHIELD ACTIVE</div>
-</div>
-
+    count = len(GLOBAL_BANKS_FINTECHS)
+    return f"""
+<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScamBuster V10.2 GLOBAL</title>
+<style>body{{background:#000;color:#fff;font-family:Arial;text-align:center;margin:0;padding:20px}}
+h1{{font-size:38px}}h1 span{{color:#00ff88}}.sub{{color:#00ccff;letter-spacing:3px;font-size:12px}}
+.badge{{margin:12px auto;background:rgba(0,255,136,0.1);border:1px solid #00ff88;border-radius:50px;padding:8px 20px;display:inline-block;font-size:11px}}
+.grid{{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:10px;max-width:1100px;margin:auto}}
+.card{{background:#111;border:1px solid #222;border-radius:12px;padding:12px;width:250px;font-size:12px}}
+.card h3{{color:#00ff88;margin:5px 0;font-size:14px}}.btn{{background:linear-gradient(90deg,#00ff88,#00ccff);color:#000;border:none;padding:11px 22px;border-radius:50px;font-weight:900;text-decoration:none;display:inline-block;margin:6px;font-size:12px}}
+.footer{{margin-top:30px;padding:12px;color:#444;font-size:9px;border-top:1px solid #111;letter-spacing:1px}}
+</style></head><body>
+<h1>SCAM<span>BUSTER</span> AI</h1>
+<div class="sub">EMPIRE V10.2 - GLOBAL BANKS & FINTECHS SHIELD</div>
+<div class="badge">🌍 {count} BANQUES & FINTECHS MONDIALES PROTÉGÉES - SYSTEM ONLINE</div>
 <div class="grid">
-<div class="card">
-<h3>🌍 Global Engine</h3>
-<p>Detecting scams across WhatsApp, Crypto, Phishing, Investments in 100+ countries.</p>
+<div class="card"><h3>🏦 {len([b for b in GLOBAL_BANKS_FINTECHS if 'Banque' in b['type']])} Banques Mondiales</h3><p>USA, EU, Africa, Asia</p></div>
+<div class="card"><h3>💳 {len([b for b in GLOBAL_BANKS_FINTECHS if 'Fintech' in b['type'] or 'Mobile' in b['type']])} Fintechs & Mobile Money</h3><p>PayPal, Wise, M-Pesa, Orange...</p></div>
+<div class="card"><h3>₿ {len([b for b in GLOBAL_BANKS_FINTECHS if 'Crypto' in b['type']])} Crypto Exchanges</h3><p>Binance, Coinbase, Trust...</p></div>
+<div class="card" style="border-color:#00ccff"><h3>🧠 AI GLOBAL</h3><p>ScamBuster connait toutes les marques que le monde utilise</p></div>
 </div>
-<div class="card">
-<h3>🛡️ V9 Ultra Core</h3>
-<p>Real-time AI analysis. No more fake links. No more stolen money. Protection for everyone.</p>
-</div>
-<div class="card">
-<h3>⚡ Empire Protocol</h3>
-<p>Built to scale. From one server to global infrastructure. Like Facebook, like Google.</p>
-</div>
-</div>
-
-<div style="margin:40px 0">
-<button class="btn" onclick="document.getElementById('mission').scrollIntoView({behavior:'smooth'})">ENTER THE EMPIRE</button>
-</div>
-
-<div id="mission" style="max-width:700px;margin:60px auto;padding:0 20px;color:#888;line-height:1.8">
-<h2 style="color:#fff;letter-spacing:3px">THE MISSION</h2>
-<p>We do not build for a city. We build for the world.<br>
-Every day, millions lose money to digital scams.<br>
-<strong style="color:#fff">ScamBuster is the shield.</strong></p>
-</div>
-
-<div class="footer">
-ORIGIN: <strong>LUBUMBASHI, DRC</strong> &nbsp;|&nbsp; MINE: <strong>THE WORLD</strong><br><br>
-Built by The Founder - 2026<br>
-pire-v7.onrender.com
-</div>
-</body>
-</html>
+<a href="/scan" class="btn">SCANNER MESSAGE</a>
+<a href="/banks" class="btn" style="background:linear-gradient(90deg,#00ccff,#aa88ff)">VOIR LES {count} BANQUES</a>
+<div style="max-width:600px;margin:20px auto;color:#666;font-size:11px;line-height:1.6">ORIGIN: LUBUMBASHI, DRC<br>MINE: THE WORLD<br><b style="color:#fff">ScamBuster AI doit toucher toutes les banques que les gens utilisent - Tu as raison Chef, c'est fait!</b></div>
+<div class="footer">ORIGIN: LUBUMBASHI | MINE: THE WORLD | V10.2 GLOBAL REGISTRY - {count} INSTITUTIONS<br>pire-v7.onrender.com</div>
+</body></html>
     """
+
+@app.route("/banks")
+def banks_page():
+    rows = "".join([f'<tr><td>{b["name"]}</td><td>{b["type"]}</td><td>{b["region"]}</td><td>{b["risk"]}</td></tr>' for b in GLOBAL_BANKS_FINTECHS])
+    return f"""<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>body{{background:#000;color:#fff;font-family:Arial;text-align:center;padding:15px}} table{{width:98%;max-width:900px;margin:15px auto;border-collapse:collapse;background:#111;border-radius:10px;overflow:hidden;font-size:12px}} th{{background:#00ff88;color:#000;padding:8px}} td{{padding:8px;border-bottom:1px solid #222}} a{{color:#00ccff;text-decoration:none}} .btn{{background:linear-gradient(90deg,#00ff88,#00ccff);color:#000;border:none;padding:10px 20px;border-radius:50px;font-weight:900;text-decoration:none;display:inline-block;margin:5px}}</style>
+</head><body><a href="/">← WORLD</a> | <a href="/scan">Scan →</a>
+<h1>🏦 GLOBAL BANKS & FINTECHS - {len(GLOBAL_BANKS_FINTECHS)} INSTITUTIONS</h1>
+<p style="color:#888;font-size:11px">Toutes les banques et fintechs que le monde utilise - Base ScamBuster AI WORLD</p>
+<table><tr><th>Nom</th><th>Type</th><th>Région</th><th>Risque Scam</th></tr>{rows}</table>
+<a href="/" class="btn">RETOUR WORLD</a>
+<div style="margin-top:20px;color:#444;font-size:9px">ORIGIN: LUBUMBASHI | MINE: THE WORLD | V10.2</div>
+</body></html>"""
+
+@app.route("/scan", methods=["GET", "POST"])
+def scan_page():
+    result_html = ""
+    if request.method == "POST":
+        user_text = request.form.get("text", "")
+        score, verdict, color, reasons = scan_engine(user_text)
+        result_html = f'<div style="background:#111;border:2px solid {color};border-radius:15px;padding:15px;margin:15px auto;max-width:500px"><h2 style="color:{color}">{verdict}</h2><p style="font-size:50px;margin:5px">{score}%</p><p style="font-size:11px">{"<br>".join(reasons) if reasons else "Aucune marque usurpée détectée"}</p></div>'
+    return f'<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{{background:#000;color:#fff;text-align:center;padding:20px;font-family:Arial}} textarea{{width:90%;max-width:500px;height:100px;background:#111;color:#fff;border:1px solid #00ff88;border-radius:10px;padding:10px}} .btn{{background:linear-gradient(90deg,#00ff88,#00ccff);color:#000;border:none;padding:12px 30px;border-radius:50px;font-weight:900;cursor:pointer;margin-top:10px}} a{{color:#00ccff;text-decoration:none}}</style></head><body><a href="/">← WORLD</a> | <a href="/banks">Banks ({len(GLOBAL_BANKS_FINTECHS)}) →</a><h1>🛡️ SCAN AI - GLOBAL BRANDS</h1><p style="font-size:12px;color:#888">Colle un message qui usurpe une banque mondiale</p><form method="POST"><textarea name="text" placeholder="Ex: Votre compte PayPal bloqué, cliquez ici http://... ou Votre Rawbank suspendu..."></textarea><br><button class="btn" type="submit">ANALYSER GLOBAL</button></form>{result_html}</body></html>'
 
 @app.route("/health")
 def health():
-    return "WORLD ONLINE"
+    return f"V10.2 GLOBAL {len(GLOBAL_BANKS_FINTECHS)} BANKS ONLINE"
