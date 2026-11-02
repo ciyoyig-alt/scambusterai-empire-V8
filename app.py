@@ -1,12 +1,10 @@
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from flask import Flask
+app = Flask(__name__)
 
-app = FastAPI()
-
-@app.get("/", response_class=HTMLResponse)
+@app.route("/")
 def home():
-    return "<h1 style='background:black;color:#00ff88;padding:100px;text-align:center'>SCAMBUSTERAI V9 ULTRA IS COMING...<br><br>Deploy SUCCESS! Maintenant on met l'ecran geant!</h1>"
+    return "<h1>🛡️ ScamBuster Empire V9 - LIVE!</h1><p>Deploy REUSSI! Empire en ligne!</p>"
 
-@app.get("/health")
+@app.route("/health")
 def health():
-    return {"status": "OK"}
+    return "OK"
