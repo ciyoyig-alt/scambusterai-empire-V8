@@ -1,2 +1,5 @@
 flask
+flask-limiter
+sqlalchemy
+psycopg2-binary
 gunicorn
