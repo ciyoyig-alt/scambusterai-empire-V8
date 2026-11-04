@@ -1,4 +1,6 @@
-import os, re, hashlib, datetime
+@app.get("/")
+def home():
+    return jsonify(status="ScamBusterAI Empire V8 is LIVE", health="/health", version="V8")import os, re, hashlib, datetime
 from functools import wraps
 from flask import Flask, request, jsonify
 from flask_limiter import Limiter
