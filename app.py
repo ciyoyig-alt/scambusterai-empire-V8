@@ -1,8 +1,6 @@
 import os, re, hashlib, datetime
 from functools import wraps
 from flask import Flask, request, jsonify
-from flask_limiter import Limiterfrom functools import wraps
-from flask import Flask, request, jsonify
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from sqlalchemy import (create_engine, MetaData, Table, Column, Integer, String,
@@ -118,9 +116,7 @@ def api_stats():
         p = c.execute(select(func.count()).select_from(patterns)).scalar()
     return jsonify(scams=n, patterns=p, capacity=1_000_000, banks=len(BANKS))
 
-@app.get("/health")
-def health():
-    return "OK"@app.get("/")
+@app.get("/")
 def home():
     return jsonify(status="ScamBusterAI Empire V8 is LIVE", health="/health", version="V8")
 
