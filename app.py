@@ -6,7 +6,6 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# --- PROTECTION JURIDIQUE - NE PAS ENLEVER ---
 DISCLAIMER = "ScamBusterAI est un outil d'aide a la decision. Il ne garantit pas 100% de detection. La decision finale appartient au client. ScamBusterAI ne peut pas etre tenu responsable des pertes financieres."
 TERMS = "En utilisant cette API, le client accepte que ScamBusterAI fournit une analyse probabiliste. La responsabilite finale de bloquer ou autoriser appartient au client."
 
@@ -24,7 +23,6 @@ BRAIN = {
     "total_blocked": 0,
 }
 
-# JOURNAL AUTOMATIQUE - PREUVE EN CAS D'ACCUSATION
 LOGS = []
 
 TRUSTED_DOMAINS = ["rawbank.com", "equitybank.com", "orange.com", "vodacom.com", "airtel.com", "wave.com"]
@@ -41,6 +39,7 @@ def ai_analyze(text, phone="", url="", client="INCONNU"):
     score = 0
     reasons = []
     signals = []
+    # AUTONOME : analyse seule, sans humain
     for pattern in BRAIN["scam_patterns"] + BRAIN["learned_scams"]:
         if re.search(pattern, text_low):
             score += 25
@@ -59,6 +58,7 @@ def ai_analyze(text, phone="", url="", client="INCONNU"):
         score += 15
         reasons.append("Pression / urgence")
         signals.append("URGENCY")
+    # AUTONOME : apprend seule
     if score >= 70 and text_low not in BRAIN["learned_scams"]:
         BRAIN["learned_scams"].append(text_low[:30])
     score = min(score, 100)
@@ -73,7 +73,6 @@ def ai_analyze(text, phone="", url="", client="INCONNU"):
         verdict, action = "SAFE", "ALLOW"
 
     timestamp = datetime.now().isoformat()
-    # Enregistrement du journal pour ta defense
     log_entry = {
         "timestamp": timestamp,
         "client": client,
@@ -91,7 +90,7 @@ def ai_analyze(text, phone="", url="", client="INCONNU"):
     return {
         "score": score, "verdict": verdict, "action": action,
         "reasons": reasons, "signals": signals, "confidence": 99.0,
-        "analyzed_by": "ScamBusterAI V9 - Autonomous",
+        "analyzed_by": "ScamBusterAI V9 - Autonomous - Sans intervention humaine",
         "timestamp": timestamp,
         "disclaimer": DISCLAIMER,
         "terms": "Decision finale au client - Voir /terms"
@@ -99,7 +98,7 @@ def ai_analyze(text, phone="", url="", client="INCONNU"):
 
 @app.route("/")
 def home():
-    return jsonify({"filter": "GLOBAL_FILTER_V9", "status": "ScamBusterAI V9 LIVE - AUTONOMOUS AI", "version": "V9-AUTONOMOUS", "disclaimer": DISCLAIMER, "stats": {"total_checked": BRAIN["total_checked"], "total_blocked": BRAIN["total_blocked"], "learned_patterns": len(BRAIN["learned_scams"])}})
+    return jsonify({"filter": "GLOBAL_FILTER_V9", "status": "ScamBusterAI V9 LIVE - AUTONOMOUS AI - SANS INTERVENTION HUMAINE", "version": "V9-AUTONOMOUS", "mode": "FULLY_AUTONOMOUS", "disclaimer": DISCLAIMER, "stats": {"total_checked": BRAIN["total_checked"], "total_blocked": BRAIN["total_blocked"], "learned_patterns": len(BRAIN["learned_scams"])}})
 
 @app.route("/terms")
 def terms():
@@ -148,11 +147,11 @@ def owner_dashboard_unique():
         """
 
     patterns_html = "".join([f"<span class='tag'>{p}</span>" for p in BRAIN["scam_patterns"]])
-    learned = "<br>".join(BRAIN["learned_scams"]) if BRAIN["learned_scams"] else "Aucun scam appris pour le moment - la machine apprend quand elle bloque."
+    learned = "<br>".join(BRAIN["learned_scams"]) if BRAIN["learned_scams"] else "Aucun scam appris pour le moment - la machine apprend seule quand elle bloque."
 
     logs_html = ""
     if not LOGS:
-        logs_html = "<p class='small'>Aucune decision enregistree pour le moment.</p>"
+        logs_html = "<p class='small'>Aucune decision enregistree pour le moment. La machine attend, toute seule.</p>"
     else:
         for l in LOGS[:20]:
             color = "#f87171" if l['verdict']=="SCAM" else "#34d399" if l['verdict']=="SAFE" else "#fbbf24"
@@ -161,7 +160,8 @@ def owner_dashboard_unique():
     html = f"""
     <!DOCTYPE html>
     <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>ScamBusterAI - Tableau de Bord Proprietaire</title>
+    <title>ScamBusterAI - Tableau de Bord Proprietaire - AUTONOME</title>
+    <meta http-equiv="refresh" content="10">
     <style>
     *{{box-sizing:border-box}} body{{margin:0;font-family:system-ui,Arial;background:#070b14;color:#fff}}
     .top{{background:linear-gradient(90deg,#6d28d9,#db2777);padding:22px 18px}}
@@ -174,26 +174,27 @@ def owner_dashboard_unique():
     .client{{display:flex;justify-content:space-between;align-items:center;background:#0f172a;border:1px solid #26314d;border-radius:12px;padding:12px;margin-top:10px}}
     .prix{{font-size:22px;font-weight:800;color:#34d399}} .small{{font-size:12px;color:#94a3b8}}
     .tag{{display:inline-block;background:#1e293b;border:1px solid #334155;padding:5px 9px;border-radius:999px;font-size:12px;margin:3px}}
-    .btn{{display:inline-block;margin-top:12px;background:#fff;color:#111;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:700}}
     .footer{{text-align:center;color:#94a3b8;font-size:12px;padding:14px}}
     .legal{{background:#fef3c7;color:#111827;border-radius:12px;padding:12px;font-size:13px;line-height:1.5}}
+    .auto{{background:#065f46;border:1px solid #34d399;border-radius:12px;padding:12px;font-size:13px}}
     </style></head><body>
-    <div class="top"><h1>🛡️ ScamBusterAI V9</h1><p>Bienvenue Proprietaire — Tu es au coeur de la machine • Fondateur</p></div>
+    <div class="top"><h1>🛡️ ScamBusterAI V9</h1><p>Bienvenue Proprietaire — Machine Autonome • Fondateur</p></div>
     <div class="wrap">
-      <div class="grid">
-        <div class="card"><h3>💰 TON REVENU MENSUEL</h3><div class="big gold">{total_revenu}$ / mois</div><p class="small">Calcule sur tes vrais clients actifs uniquement.</p></div>
+      <div class="auto">🤖 <b>MODE AUTONOME ACTIF</b> — Cette page se met a jour toute seule toutes les 10 secondes. Aucune intervention humaine necessaire. La machine analyse, bloque, apprend et enregistre seule.</div>
+      <div class="grid" style="margin-top:14px">
+        <div class="card"><h3>💰 TON REVENU MENSUEL</h3><div class="big gold">{total_revenu}$ / mois</div><p class="small">Calcule seul sur tes vrais clients actifs.</p></div>
         <div class="card"><h3>👥 TES CLIENTS ACTIFS</h3><div class="big">{len(CLIENTS)}</div><p class="small">Clients qui paient reellement.</p></div>
-        <div class="card"><h3>🔍 TOTAL VERIFIES</h3><div class="big">{BRAIN['total_checked']}</div><p class="small">Messages / liens analyses par ton IA.</p></div>
-        <div class="card"><h3>🚫 TOTAL BLOQUES</h3><div class="big red">{BRAIN['total_blocked']}</div><p class="small">Scams bloques automatiquement.</p></div>
+        <div class="card"><h3>🔍 TOTAL VERIFIES</h3><div class="big">{BRAIN['total_checked']}</div><p class="small">Analyses faites seules par ton IA.</p></div>
+        <div class="card"><h3>🚫 TOTAL BLOQUES</h3><div class="big red">{BRAIN['total_blocked']}</div><p class="small">Scams bloques seuls, sans humain.</p></div>
       </div>
       <div class="card" style="margin-top:14px"><h3>📋 TES CLIENTS</h3>{clients_html}</div>
-      <div class="card" style="margin-top:14px"><h3>🧠 CERVEAU DE L'IA — PATTERNS DE BASE</h3><div style="margin-top:8px">{patterns_html}</div><p class="small">Ces patterns sont dans ton code, ils ne sont pas inventes.</p></div>
+      <div class="card" style="margin-top:14px"><h3>🧠 CERVEAU DE L'IA — PATTERNS DE BASE</h3><div style="margin-top:8px">{patterns_html}</div><p class="small">Ces patterns sont dans ton code.</p></div>
       <div class="card" style="margin-top:14px"><h3>📚 CE QUE L'IA A APPRIS TOUTE SEULE</h3><p style="font-size:14px">{learned}</p><p class="small">Nombre de patterns appris : {len(BRAIN['learned_scams'])}</p></div>
-      <div class="card" style="margin-top:14px"><h3>📜 JOURNAL DES DECISIONS — TA PREUVE</h3><p class="small">Chaque decision de ton IA est enregistree ici. En cas d'accusation, tu montres ce journal.</p>{logs_html}</div>
+      <div class="card" style="margin-top:14px"><h3>📜 JOURNAL DES DECISIONS — TA PREUVE</h3><p class="small">Enregistre seul, chaque decision. Aucun humain ne touche.</p>{logs_html}</div>
       <div class="card" style="margin-top:14px"><h3>⚖️ PROTECTION JURIDIQUE</h3><div class="legal"><b>⚠️ IMPORTANT :</b> {DISCLAIMER}<br><br>{TERMS}</div></div>
-      <div class="card" style="margin-top:14px"><h3>⚙️ ETAT DU SYSTEME</h3><p>Statut : <b class="green">● LIVE - AUTONOMOUS AI</b><br>Version : V9-AUTONOMOUS<br>Filtre : GLOBAL_FILTER_V9<br>Serveur : scambusterai-empire-v7.onrender.com</p><a class="btn" href="/owner?key={OWNER_KEY}">↻ Actualiser</a></div>
+      <div class="card" style="margin-top:14px"><h3>⚙️ ETAT DU SYSTEME</h3><p>Statut : <b class="green">● LIVE - AUTONOMOUS AI - SANS INTERVENTION HUMAINE</b><br>Version : V9-AUTONOMOUS<br>Filtre : GLOBAL_FILTER_V9<br>Serveur : scambusterai-empire-v7.onrender.com</p></div>
     </div>
-    <div class="footer">ScamBusterAI V9 — Tableau de Bord Prive Proprietaire — Lubumbashi</div>
+    <div class="footer">ScamBusterAI V9 — Machine Autonome — Tableau de Bord Prive Proprietaire — Lubumbashi</div>
     </body></html>
     """
     return html
