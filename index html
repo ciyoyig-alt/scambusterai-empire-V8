@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScamBusterAI - Your AI Shield Before You Pay</title>
+<style>
+body{margin:0;font-family:sans-serif;background:#050510;color:white;text-align:center;padding:20px}
+h1{font-size:2.2rem;line-height:1.1} h1 span{color:#00f2ff}
+p{color:#ccc}
+.box{max-width:600px;margin:30px auto;background:#111126;padding:20px;border-radius:20px;border:1px solid #00f2ff}
+input{width:90%;padding:15px;border-radius:10px;border:none;font-size:1rem}
+button{margin-top:15px;padding:15px 30px;background:#00f2ff;color:#000;font-weight:bold;border:none;border-radius:50px;font-size:1rem;cursor:pointer}
+#result{margin-top:20px;font-size:1.2rem;font-weight:bold}
+.footer{margin-top:40px;color:#666;font-size:0.8rem}
+</style>
+</head>
+<body>
+<h1>Nous ne sommes pas <span>une entreprise.</span><br>Nous sommes un bouclier.</h1>
+<p>Colle un message, un lien ou un numéro suspect. Notre IA V9 te dit la vérité en 3 secondes.</p>
+
+<div class="box">
+<input id="text" placeholder="Ex: Urgent, ton compte Rawbank a été débité, clique ici...">
+<br>
+<button onclick="check()">VÉRIFIER MAINTENANT 🛡️</button>
+<div id="result"></div>
+</div>
+
+<p>Facebook a connecté le monde. Nous, on le protège.</p>
+<div class="footer">ScamBusterAI Global - Né à Lubumbashi, pour 195 Pays - 2026</div>
+
+<script>
+async function check(){
+  let t = document.getElementById('text').value;
+  let r = document.getElementById('result');
+  if(!t){ r.innerText = "Colle d'abord un message patron"; return; }
+  r.innerText = "Analyse en cours...";
+  try{
+    let res = await fetch('https://scam-buster-api.onrender.com/analyze', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':'TA_CLE_ICI'},
+      body: JSON.stringify({text:t})
+    });
+    let data = await res.json();
+    r.innerText = JSON.stringify(data, null, 2);
+  }catch(e){ r.innerText = "Erreur de connexion, réessaie"; }
+}
+</script>
+</body>
+</html>
