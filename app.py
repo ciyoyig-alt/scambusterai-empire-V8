@@ -1,9 +1,14 @@
 from flask import Flask, request, jsonify
 import re
 import os
+import hashlib
 from datetime import datetime
 
 app = Flask(__name__)
+
+# --- PROTECTION JURIDIQUE - NE PAS ENLEVER ---
+DISCLAIMER = "ScamBusterAI est un outil d'aide a la decision. Il ne garantit pas 100% de detection. La decision finale appartient au client. ScamBusterAI ne peut pas etre tenu responsable des pertes financieres."
+TERMS = "En utilisant cette API, le client accepte que ScamBusterAI fournit une analyse probabiliste. La responsabilite finale de bloquer ou autoriser appartient au client."
 
 BRAIN = {
     "scam_patterns": [
@@ -19,6 +24,9 @@ BRAIN = {
     "total_blocked": 0,
 }
 
+# JOURNAL AUTOMATIQUE - PREUVE EN CAS D'ACCUSATION
+LOGS = []
+
 TRUSTED_DOMAINS = ["rawbank.com", "equitybank.com", "orange.com", "vodacom.com", "airtel.com", "wave.com"]
 OWNER_KEY = "MOI-PROPRIETAIRE-2026"
 
@@ -27,7 +35,7 @@ CLIENTS = {
     "Wave": {"key": "WAVE-456", "paye": 300, "status": "ACTIF"},
 }
 
-def ai_analyze(text, phone="", url=""):
+def ai_analyze(text, phone="", url="", client="INCONNU"):
     text_low = (text or "").lower()
     url_low = (url or "").lower()
     score = 0
@@ -63,35 +71,63 @@ def ai_analyze(text, phone="", url=""):
         verdict, action = "SUSPICIOUS", "REVIEW"
     else:
         verdict, action = "SAFE", "ALLOW"
-    return {"score": score, "verdict": verdict, "action": action, "reasons": reasons, "signals": signals, "confidence": 99.0, "analyzed_by": "ScamBusterAI V9 - Autonomous", "timestamp": datetime.now().isoformat()}
+
+    timestamp = datetime.now().isoformat()
+    # Enregistrement du journal pour ta defense
+    log_entry = {
+        "timestamp": timestamp,
+        "client": client,
+        "input_hash": hashlib.sha256((text+url).encode()).hexdigest()[:12],
+        "input_preview": (text or url)[:80],
+        "score": score,
+        "verdict": verdict,
+        "action": action,
+        "reasons": reasons
+    }
+    LOGS.insert(0, log_entry)
+    if len(LOGS) > 200:
+        LOGS.pop()
+
+    return {
+        "score": score, "verdict": verdict, "action": action,
+        "reasons": reasons, "signals": signals, "confidence": 99.0,
+        "analyzed_by": "ScamBusterAI V9 - Autonomous",
+        "timestamp": timestamp,
+        "disclaimer": DISCLAIMER,
+        "terms": "Decision finale au client - Voir /terms"
+    }
 
 @app.route("/")
 def home():
-    return jsonify({"filter": "GLOBAL_FILTER_V9", "status": "ScamBusterAI V9 LIVE - AUTONOMOUS AI", "version": "V9-AUTONOMOUS", "stats": {"total_checked": BRAIN["total_checked"], "total_blocked": BRAIN["total_blocked"], "learned_patterns": len(BRAIN["learned_scams"])}})
+    return jsonify({"filter": "GLOBAL_FILTER_V9", "status": "ScamBusterAI V9 LIVE - AUTONOMOUS AI", "version": "V9-AUTONOMOUS", "disclaimer": DISCLAIMER, "stats": {"total_checked": BRAIN["total_checked"], "total_blocked": BRAIN["total_blocked"], "learned_patterns": len(BRAIN["learned_scams"])}})
+
+@app.route("/terms")
+def terms():
+    return jsonify({"terms": TERMS, "disclaimer": DISCLAIMER, "responsabilite": "La decision finale appartient au client. ScamBusterAI fournit une aide a la decision."})
 
 @app.route("/api/v9/check", methods=["POST"])
 def check_universal():
     data = request.get_json() or {}
-    return jsonify(ai_analyze(data.get("text",""), data.get("phone",""), data.get("url","")))
+    return jsonify(ai_analyze(data.get("text",""), data.get("phone",""), data.get("url",""), data.get("client","INCONNU")))
 
 @app.route("/api/v9/check-sms", methods=["POST"])
 def check_sms():
     data = request.get_json() or {}
-    r = ai_analyze(data.get("message","") or data.get("text",""))
+    r = ai_analyze(data.get("message","") or data.get("text",""), "", "", data.get("client","INCONNU"))
     r["sector"] = "MOBILE_NETWORK"
     return jsonify(r)
 
 @app.route("/api/v9/check-payment", methods=["POST"])
 def check_payment():
     data = request.get_json() or {}
-    r = ai_analyze(data.get("text",""), data.get("phone",""), data.get("link","") or data.get("url",""))
+    r = ai_analyze(data.get("text",""), data.get("phone",""), data.get("link","") or data.get("url",""), data.get("client","INCONNU"))
     r["sector"] = "FINTECH"
     return jsonify(r)
 
 @app.route("/api/v9/check-url", methods=["POST"])
 def check_url():
     data = request.get_json() or {}
-    r = ai_analyze("", "", data.get("url",""))
+    r = ai_analyze("", "", data.get("url",""), data.get("client","INCONNU"))
     r["sector"] = "BANK"
     return jsonify(r)
 
@@ -114,6 +150,14 @@ def owner_dashboard_unique():
     patterns_html = "".join([f"<span class='tag'>{p}</span>" for p in BRAIN["scam_patterns"]])
     learned = "<br>".join(BRAIN["learned_scams"]) if BRAIN["learned_scams"] else "Aucun scam appris pour le moment - la machine apprend quand elle bloque."
 
+    logs_html = ""
+    if not LOGS:
+        logs_html = "<p class='small'>Aucune decision enregistree pour le moment.</p>"
+    else:
+        for l in LOGS[:20]:
+            color = "#f87171" if l['verdict']=="SCAM" else "#34d399" if l['verdict']=="SAFE" else "#fbbf24"
+            logs_html += f"<div style='background:#0f172a;border:1px solid #26314d;border-radius:10px;padding:10px;margin-top:8px'><b style='color:{color}'>{l['verdict']} - {l['score']}/100 - {l['action']}</b><br><span class='small'>{l['timestamp']} | Client: {l['client']} | Hash: {l['input_hash']}</span><br><span style='font-size:13px'>{l['input_preview']}</span><br><span class='small'>Raisons: {', '.join(l['reasons']) if l['reasons'] else 'Aucune'}</span></div>"
+
     html = f"""
     <!DOCTYPE html>
     <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -132,6 +176,7 @@ def owner_dashboard_unique():
     .tag{{display:inline-block;background:#1e293b;border:1px solid #334155;padding:5px 9px;border-radius:999px;font-size:12px;margin:3px}}
     .btn{{display:inline-block;margin-top:12px;background:#fff;color:#111;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:700}}
     .footer{{text-align:center;color:#94a3b8;font-size:12px;padding:14px}}
+    .legal{{background:#fef3c7;color:#111827;border-radius:12px;padding:12px;font-size:13px;line-height:1.5}}
     </style></head><body>
     <div class="top"><h1>🛡️ ScamBusterAI V9</h1><p>Bienvenue Proprietaire — Tu es au coeur de la machine • Fondateur</p></div>
     <div class="wrap">
@@ -144,6 +189,8 @@ def owner_dashboard_unique():
       <div class="card" style="margin-top:14px"><h3>📋 TES CLIENTS</h3>{clients_html}</div>
       <div class="card" style="margin-top:14px"><h3>🧠 CERVEAU DE L'IA — PATTERNS DE BASE</h3><div style="margin-top:8px">{patterns_html}</div><p class="small">Ces patterns sont dans ton code, ils ne sont pas inventes.</p></div>
       <div class="card" style="margin-top:14px"><h3>📚 CE QUE L'IA A APPRIS TOUTE SEULE</h3><p style="font-size:14px">{learned}</p><p class="small">Nombre de patterns appris : {len(BRAIN['learned_scams'])}</p></div>
+      <div class="card" style="margin-top:14px"><h3>📜 JOURNAL DES DECISIONS — TA PREUVE</h3><p class="small">Chaque decision de ton IA est enregistree ici. En cas d'accusation, tu montres ce journal.</p>{logs_html}</div>
+      <div class="card" style="margin-top:14px"><h3>⚖️ PROTECTION JURIDIQUE</h3><div class="legal"><b>⚠️ IMPORTANT :</b> {DISCLAIMER}<br><br>{TERMS}</div></div>
       <div class="card" style="margin-top:14px"><h3>⚙️ ETAT DU SYSTEME</h3><p>Statut : <b class="green">● LIVE - AUTONOMOUS AI</b><br>Version : V9-AUTONOMOUS<br>Filtre : GLOBAL_FILTER_V9<br>Serveur : scambusterai-empire-v7.onrender.com</p><a class="btn" href="/owner?key={OWNER_KEY}">↻ Actualiser</a></div>
     </div>
     <div class="footer">ScamBusterAI V9 — Tableau de Bord Prive Proprietaire — Lubumbashi</div>
