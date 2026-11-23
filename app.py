@@ -99,9 +99,57 @@ def check_url():
 def owner_dashboard_unique():
     key = request.args.get("key")
     if key != OWNER_KEY:
-        return jsonify({"error": "ACCES REFUSE - Seule la proprietaire entre ici"}), 403
+        return "<h1>ACCES REFUSE - Seul le proprietaire entre ici</h1>", 403
+
     total_revenu = sum(c["paye"] for c in CLIENTS.values())
-    return jsonify({"message": "Bienvenue Proprietaire, tu es au coeur de la machine", "proprietaire": "TOI - Fondatrice de ScamBusterAI V9", "ton_revenu_mensuel": f"{total_revenu}$ / mois", "total_verifies": BRAIN["total_checked"], "total_bloques": BRAIN["total_blocked"], "tes_clients": CLIENTS})
+    clients_html = ""
+    for nom, c in CLIENTS.items():
+        clients_html += f"""
+        <div class="client">
+          <div><b>{nom}</b><br><span class="small">Clé: {c['key']} • {c['status']}</span></div>
+          <div class="prix">{c['paye']}$<span class="small"> / mois</span></div>
+        </div>
+        """
+
+    patterns_html = "".join([f"<span class='tag'>{p}</span>" for p in BRAIN["scam_patterns"]])
+    learned = "<br>".join(BRAIN["learned_scams"]) if BRAIN["learned_scams"] else "Aucun scam appris pour le moment - la machine apprend quand elle bloque."
+
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>ScamBusterAI - Tableau de Bord Proprietaire</title>
+    <style>
+    *{{box-sizing:border-box}} body{{margin:0;font-family:system-ui,Arial;background:#070b14;color:#fff}}
+    .top{{background:linear-gradient(90deg,#6d28d9,#db2777);padding:22px 18px}}
+    .top h1{{margin:0;font-size:26px}} .top p{{margin:6px 0 0;opacity:.9}}
+    .wrap{{max-width:920px;margin:0 auto;padding:16px}}
+    .grid{{display:grid;grid-template-columns:1fr 1fr;gap:14px}} @media(max-width:600px){{.grid{{grid-template-columns:1fr}}}}
+    .card{{background:#111827;border:1px solid #26314d;border-radius:16px;padding:16px}}
+    .card h3{{margin:0 0 6px;font-size:14px;color:#a5b4fc}} .big{{font-size:34px;font-weight:800}}
+    .green{{color:#34d399}} .red{{color:#f87171}} .gold{{color:#fbbf24}}
+    .client{{display:flex;justify-content:space-between;align-items:center;background:#0f172a;border:1px solid #26314d;border-radius:12px;padding:12px;margin-top:10px}}
+    .prix{{font-size:22px;font-weight:800;color:#34d399}} .small{{font-size:12px;color:#94a3b8}}
+    .tag{{display:inline-block;background:#1e293b;border:1px solid #334155;padding:5px 9px;border-radius:999px;font-size:12px;margin:3px}}
+    .btn{{display:inline-block;margin-top:12px;background:#fff;color:#111;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:700}}
+    .footer{{text-align:center;color:#94a3b8;font-size:12px;padding:14px}}
+    </style></head><body>
+    <div class="top"><h1>🛡️ ScamBusterAI V9</h1><p>Bienvenue Proprietaire — Tu es au coeur de la machine • Fondateur</p></div>
+    <div class="wrap">
+      <div class="grid">
+        <div class="card"><h3>💰 TON REVENU MENSUEL</h3><div class="big gold">{total_revenu}$ / mois</div><p class="small">Calcule sur tes vrais clients actifs uniquement.</p></div>
+        <div class="card"><h3>👥 TES CLIENTS ACTIFS</h3><div class="big">{len(CLIENTS)}</div><p class="small">Clients qui paient reellement.</p></div>
+        <div class="card"><h3>🔍 TOTAL VERIFIES</h3><div class="big">{BRAIN['total_checked']}</div><p class="small">Messages / liens analyses par ton IA.</p></div>
+        <div class="card"><h3>🚫 TOTAL BLOQUES</h3><div class="big red">{BRAIN['total_blocked']}</div><p class="small">Scams bloques automatiquement.</p></div>
+      </div>
+      <div class="card" style="margin-top:14px"><h3>📋 TES CLIENTS</h3>{clients_html}</div>
+      <div class="card" style="margin-top:14px"><h3>🧠 CERVEAU DE L'IA — PATTERNS DE BASE</h3><div style="margin-top:8px">{patterns_html}</div><p class="small">Ces patterns sont dans ton code, ils ne sont pas inventes.</p></div>
+      <div class="card" style="margin-top:14px"><h3>📚 CE QUE L'IA A APPRIS TOUTE SEULE</h3><p style="font-size:14px">{learned}</p><p class="small">Nombre de patterns appris : {len(BRAIN['learned_scams'])}</p></div>
+      <div class="card" style="margin-top:14px"><h3>⚙️ ETAT DU SYSTEME</h3><p>Statut : <b class="green">● LIVE - AUTONOMOUS AI</b><br>Version : V9-AUTONOMOUS<br>Filtre : GLOBAL_FILTER_V9<br>Serveur : scambusterai-empire-v7.onrender.com</p><a class="btn" href="/owner?key={OWNER_KEY}">↻ Actualiser</a></div>
+    </div>
+    <div class="footer">ScamBusterAI V9 — Tableau de Bord Prive Proprietaire — Lubumbashi</div>
+    </body></html>
+    """
+    return html
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
